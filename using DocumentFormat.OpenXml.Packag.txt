@@ -1,0 +1,64 @@
+using DocumentFormat.OpenXml.Packaging;
+
+string docxFilePath = "path/to/your/docx/file.docx";
+using WordprocessingDocument doc = WordprocessingDocument.Open(docxFilePath, true);
+MainDocumentPart mainPart = doc.MainDocumentPart;
+
+
+string xmlFilePath = "word/document.xml";  // Path to the XML file inside the DOCX
+var xmlPart = mainPart.GetPartById("rId1"); // rId1 represents the relationship ID of the XML file
+
+// Load the XML content into an XDocument
+using var xmlStream = xmlPart.GetStream();
+using var xmlReader = XmlReader.Create(xmlStream);
+XDocument xmlDocument = XDocument.Load(xmlReader);
+
+// Modify the XML content as needed
+// Example: Change the value of a specific element
+XElement element = xmlDocument.Root?.Descendants("YourElementName").FirstOrDefault();
+if (element != null)
+{
+    element.Value = "New value";
+}
+
+xmlDocument.Save(xmlStream);
+doc.Close();
+
+
+
+
+using System;
+using System.IO;
+using System.IO.Compression;
+
+string docxFilePath = "C:\\Users\\tamph\\Downloads\\docx\\Ts.docx";
+string extractFolderPath = "C:\\Users\\tamph\\Downloads\\docx";
+
+// Create a directory to extract the contents of the DOCX file
+Directory.CreateDirectory(extractFolderPath);
+
+// Extract the contents of the DOCX file
+using (ZipArchive archive = ZipFile.OpenRead(docxFilePath))
+{
+    foreach (ZipArchiveEntry entry in archive.Entries)
+    {
+        string entryFilePath = Path.Combine(extractFolderPath, entry.FullName);
+        if (entry.Length == 0) // For directories
+        {
+            Directory.CreateDirectory(entryFilePath);
+        }
+        else // For files
+        {
+            entry.ExtractToFile(entryFilePath, true);
+        }
+    }
+}
+
+// Display the extracted files and folders
+Console.WriteLine("Extracted files and folders:");
+foreach (string filePath in Directory.GetFiles(extractFolderPath, "*", SearchOption.AllDirectories))
+{
+    Console.WriteLine(filePath);
+}
+
+
